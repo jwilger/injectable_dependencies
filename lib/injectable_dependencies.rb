@@ -17,12 +17,18 @@ require 'active_support/concern'
 #
 module InjectableDependencies
   UndeclaredDependencyError = Class.new(StandardError)
+  MissingImplementationError = Class.new(StandardError)
+
   extend ActiveSupport::Concern
 
   module ClassMethods
-    def dependency(name, &proc)
+    def dependency(name, &block)
       dependencies << name
-      define_method(name, &proc) # available to all instances
+      if block
+        define_method(name, &block) # available to all instances
+      else
+        no_default_dependencies << name
+      end
     end
 
     protected
@@ -30,10 +36,19 @@ module InjectableDependencies
     def dependencies
       @dependencies ||= []
     end
+
+    def no_default_dependencies
+      @no_default_dependencies ||= []
+    end
   end
 
   def initialize_dependencies(overrides = {})
     return unless overrides
+    self.class.send(:no_default_dependencies).each do |name|
+      unless overrides.has_key?(name)
+        raise MissingImplementationError.new("No implementation was provided for dependency ##{name}")
+      end
+    end
     overrides.each do |k,v|
       unless self.class.send(:dependencies).include?(k)
         raise UndeclaredDependencyError, "Cannot override undeclared dependency '#{k}'."

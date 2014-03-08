@@ -46,4 +46,22 @@ describe InjectableDependencies do
       .to raise_error(InjectableDependencies::UndeclaredDependencyError,
                       "Cannot override undeclared dependency 'undeclared_thing'.")
   end
+
+  context 'when a dependency is defined without a default implementation' do
+    let(:dependent_class) {
+      Class.new do
+        include InjectableDependencies
+        dependency(:baz)
+        def initialize(dependencies = {})
+          initialize_dependencies(dependencies)
+        end
+      end
+    }
+
+    it 'raises an error if an implementation is not provided during dependency initialization' do
+      expect{ dependent_class.new }.to \
+        raise_error(InjectableDependencies::MissingImplementationError,
+                    'No implementation was provided for dependency #baz')
+    end
+  end
 end
