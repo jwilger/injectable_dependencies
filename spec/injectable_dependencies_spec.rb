@@ -14,6 +14,14 @@ describe InjectableDependencies do
     end
   }
 
+  let(:dependent_class_with_default_initializer) {
+    Class.new do
+      include InjectableDependencies
+      dependency(:foo) { FooDependency }
+      dependency(:bar) { IfThisConstantIsEverDefinedSomeoneIsGettingFiredAndItWontBeMe }
+    end
+  }
+
   let(:dependant) {
     dependant_class.new
   }
@@ -28,6 +36,11 @@ describe InjectableDependencies do
 
   it 'provides a convenience method for setting dependencies from the initializer' do
     dependant = dependant_class.new(:dependencies => {:bar => :bar_dependency})
+    expect(dependant.bar).to eq :bar_dependency
+  end
+
+  it 'provides a default initializer that allows dependency overrides' do
+    dependant = dependent_class_with_default_initializer.new(:dependencies => {:bar => :bar_dependency})
     expect(dependant.bar).to eq :bar_dependency
   end
 
@@ -48,7 +61,7 @@ describe InjectableDependencies do
   end
 
   context 'when a dependency is defined without a default implementation' do
-    let(:dependent_class) {
+    let(:dependent_class_with_own_initializer) {
       Class.new do
         include InjectableDependencies
         dependency(:baz)
@@ -59,7 +72,7 @@ describe InjectableDependencies do
     }
 
     it 'raises an error if an implementation is not provided during dependency initialization' do
-      expect{ dependent_class.new }.to \
+      expect{ dependent_class_with_own_initializer.new }.to \
         raise_error(InjectableDependencies::MissingImplementationError,
                     'No implementation was provided for dependency #baz')
     end

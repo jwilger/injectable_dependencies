@@ -42,6 +42,12 @@ module InjectableDependencies
     end
   end
 
+  def initialize(opts={})
+    if opts.has_key?(:dependencies)
+      initialize_dependencies(opts[:dependencies])
+    end
+  end
+
   def initialize_dependencies(overrides = {})
     return unless overrides
     self.class.send(:no_default_dependencies).each do |name|
