@@ -42,6 +42,7 @@ describe InjectableDependencies do
   it 'provides a default initializer that allows dependency overrides' do
     dependant = dependent_class_with_default_initializer.new(:dependencies => {:bar => :bar_dependency})
     expect(dependant.bar).to eq :bar_dependency
+    expect(dependant.foo).to be FooDependency
   end
 
   it 'does not persist dependencies between instances' do
@@ -61,20 +62,37 @@ describe InjectableDependencies do
   end
 
   context 'when a dependency is defined without a default implementation' do
-    let(:dependent_class_with_own_initializer) {
-      Class.new do
-        include InjectableDependencies
-        dependency(:baz)
-        def initialize(dependencies = {})
-          initialize_dependencies(dependencies)
+    context 'when the dependent class has its own initializer' do
+      let(:dependent_class) {
+        Class.new do
+          include InjectableDependencies
+          dependency(:baz)
+          def initialize(dependencies = {})
+            initialize_dependencies(dependencies)
+          end
         end
-      end
-    }
+      }
 
-    it 'raises an error if an implementation is not provided during dependency initialization' do
-      expect{ dependent_class_with_own_initializer.new }.to \
-        raise_error(InjectableDependencies::MissingImplementationError,
-                    'No implementation was provided for dependency #baz')
+      it 'raises an error if an implementation is not provided during dependency initialization' do
+        expect{ dependent_class.new }.to \
+          raise_error(InjectableDependencies::MissingImplementationError,
+                      'No implementation was provided for dependency #baz')
+      end
+    end
+
+    context 'when the dependent class uses the default initializer' do
+      let(:dependent_class) {
+        Class.new do
+          include InjectableDependencies
+          dependency(:baz)
+        end
+      }
+
+      it 'raises an error if an implementation is not provided during dependency initialization' do
+        expect{ dependent_class.new }.to \
+          raise_error(InjectableDependencies::MissingImplementationError,
+                      'No implementation was provided for dependency #baz')
+      end
     end
   end
 end

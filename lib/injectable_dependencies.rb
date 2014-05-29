@@ -43,9 +43,8 @@ module InjectableDependencies
   end
 
   def initialize(opts={})
-    if opts.has_key?(:dependencies)
-      initialize_dependencies(opts[:dependencies])
-    end
+    dependencies = opts[:dependencies] || {}
+    initialize_dependencies(dependencies)
   end
 
   def initialize_dependencies(overrides = {})
