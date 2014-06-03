@@ -3,7 +3,7 @@ require 'injectable_dependencies'
 describe InjectableDependencies do
   FooDependency = :foo_dependency
 
-  let(:dependant_class) {
+  let(:dependent_class) {
     Class.new do
       include InjectableDependencies
       dependency(:foo) { FooDependency }
@@ -22,33 +22,33 @@ describe InjectableDependencies do
     end
   }
 
-  let(:dependant) {
-    dependant_class.new
+  let(:dependent) {
+    dependent_class.new
   }
 
   it 'allows the class to declare dependencies' do
-    expect(dependant.foo).to eq FooDependency
+    expect(dependent.foo).to eq FooDependency
   end
 
   it 'does not evaluate dependencies declared by the class until they are requested' do
-    expect{ dependant.bar }.to raise_error(NameError)
+    expect{ dependent.bar }.to raise_error(NameError)
   end
 
   it 'provides a convenience method for setting dependencies from the initializer' do
-    dependant = dependant_class.new(:dependencies => {:bar => :bar_dependency})
-    expect(dependant.bar).to eq :bar_dependency
+    dependent = dependent_class.new(:dependencies => {:bar => :bar_dependency})
+    expect(dependent.bar).to eq :bar_dependency
   end
 
   it 'provides a default initializer that allows dependency overrides' do
-    dependant = dependent_class_with_default_initializer.new(:dependencies => {:bar => :bar_dependency})
-    expect(dependant.bar).to eq :bar_dependency
-    expect(dependant.foo).to be FooDependency
+    dependent = dependent_class_with_default_initializer.new(:dependencies => {:bar => :bar_dependency})
+    expect(dependent.bar).to eq :bar_dependency
+    expect(dependent.foo).to be FooDependency
   end
 
   it 'does not persist dependencies between instances' do
-    s0 = dependant_class.new
-    s1 = dependant_class.new(:dependencies => { :foo => :s1_dep })
-    s2 = dependant_class.new(:dependencies => { :foo => :s2_dep })
+    s0 = dependent_class.new
+    s1 = dependent_class.new(:dependencies => { :foo => :s1_dep })
+    s2 = dependent_class.new(:dependencies => { :foo => :s2_dep })
 
     expect(s0.foo).to eq FooDependency
     expect(s1.foo).to eq :s1_dep
@@ -56,7 +56,7 @@ describe InjectableDependencies do
   end
 
   it 'does not allow undeclared dependencies to be specified in initializer' do
-    expect{ dependant_class.new(:dependencies => {:undeclared_thing => :oops}) } \
+    expect{ dependent_class.new(:dependencies => {:undeclared_thing => :oops}) } \
       .to raise_error(InjectableDependencies::UndeclaredDependencyError,
                       "Cannot override undeclared dependency 'undeclared_thing'.")
   end
