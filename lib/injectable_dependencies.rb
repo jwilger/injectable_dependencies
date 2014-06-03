@@ -34,11 +34,11 @@ module InjectableDependencies
     protected
 
     def dependencies
-      @dependencies ||= []
+      @@dependencies ||= []
     end
 
     def no_default_dependencies
-      @no_default_dependencies ||= []
+      @@no_default_dependencies ||= []
     end
   end
 
